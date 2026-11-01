@@ -568,6 +568,7 @@ Change Log
 UNRELEASED
 ~~~~~~~~~~
 
+* Drop Python 3.10 support (flake8 itself now requires >=3.11)
 * B018: only report a ``map()``, ``filter()``, ``reversed()``, ``zip()`` or
   ``enumerate()`` statement when the name is the builtin, not when the module
   defines or imports its own function under that name, which may well do the work
