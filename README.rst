@@ -407,7 +407,7 @@ to raise a ``ValueError`` if the arguments are exhausted at differing lengths.
 
 Exclusions are `itertools.count <https://docs.python.org/3/library/itertools.html#itertools.count>`_, `itertools.cycle <https://docs.python.org/3/library/itertools.html#itertools.cycle>`_ and `itertools.repeat <https://docs.python.org/3/library/itertools.html#itertools.repeat>`_ (with times=None) since they are infinite iterators.
 
-The ``strict=`` argument was added in Python 3.10.
+The ``strict=`` argument was added in Python 3.10, so don't enable this flag for code that should work on <3.10.
 For more information: https://peps.python.org/pep-0618/
 
 .. _B906:

@@ -15,16 +15,8 @@ from collections import Counter, defaultdict
 from contextlib import suppress
 from functools import lru_cache
 from keyword import iskeyword
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    NamedTuple,
-    Protocol,
-    Sequence,
-    cast,
-)
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from typing import Any, NamedTuple, Protocol, cast
 
 import attr  # type: ignore
 import pycodestyle  # type: ignore
@@ -78,7 +70,7 @@ B018_ARITHMETIC_OPERATORS = (
 # never calls `print`. `iter` is left out: `iter(x)` calls `x.__iter__()` right
 # away, which is what a bare `iter(x)` is usually for.
 B018_LAZY_FUNCTIONS = ("enumerate", "filter", "map", "reversed", "zip")
-B018_RAISING_BLOCKS: tuple[type[ast.stmt], ...] = (
+B018_RAISING_BLOCKS = (
     ast.Try,
     ast.With,
     ast.AsyncWith,
