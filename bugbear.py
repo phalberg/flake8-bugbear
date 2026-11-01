@@ -18,10 +18,8 @@ from keyword import iskeyword
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     Iterator,
-    List,
     NamedTuple,
     Protocol,
     Sequence,
@@ -80,9 +78,12 @@ B018_ARITHMETIC_OPERATORS = (
 # never calls `print`. `iter` is left out: `iter(x)` calls `x.__iter__()` right
 # away, which is what a bare `iter(x)` is usually for.
 B018_LAZY_FUNCTIONS = ("enumerate", "filter", "map", "reversed", "zip")
-B018_RAISING_BLOCKS: tuple[type[ast.stmt], ...] = (ast.Try, ast.With, ast.AsyncWith)
-if sys.version_info >= (3, 11):
-    B018_RAISING_BLOCKS += (ast.TryStar,)
+B018_RAISING_BLOCKS: tuple[type[ast.stmt], ...] = (
+    ast.Try,
+    ast.With,
+    ast.AsyncWith,
+    ast.TryStar,
+)
 B908_pytest_functions = {"raises", "warns"}
 B908_unittest_methods = {
     "assertRaises",
@@ -2397,8 +2398,6 @@ class BugBearVisitor(ast.NodeVisitor):
             )
         ):
             slice = node.returns.slice
-            if sys.version_info < (3, 9) and isinstance(slice, ast.Index):
-                slice = slice.value
             if isinstance(slice, ast.Tuple) and len(slice.elts) == 3:
                 return
 
@@ -3502,7 +3501,7 @@ class NameFinder(ast.NodeVisitor):
     key is name string, value is the node (useful for location purposes).
     """
 
-    names: Dict[str, List[ast.Name]] = attr.ib(factory=dict)
+    names: dict[str, list[ast.Name]] = attr.ib(factory=dict)
 
     def visit_Name(  # noqa: B906 # names don't contain other names
         self, node: ast.Name
@@ -3578,7 +3577,7 @@ class NamedExprFinder(ast.NodeVisitor):
     key is name string, value is the node (useful for location purposes).
     """
 
-    names: Dict[str, List[ast.Name]] = attr.ib(factory=dict)
+    names: dict[str, list[ast.Name]] = attr.ib(factory=dict)
 
     def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
         self.names.setdefault(node.target.id, []).append(node.target)
