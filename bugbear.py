@@ -126,7 +126,7 @@ def _is_rebound(
     )
 
 
-@define(unsafe_hash=False)
+@define(slots=False, unsafe_hash=False)
 class BugBearChecker:
     name = "flake8-bugbear"
     version = __version__
