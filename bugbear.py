@@ -12,10 +12,10 @@ import sys
 import tokenize
 import warnings
 from collections import Counter, defaultdict
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextlib import suppress
 from functools import lru_cache
 from keyword import iskeyword
-from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Any, NamedTuple, Protocol, cast
 
 import attr  # type: ignore
