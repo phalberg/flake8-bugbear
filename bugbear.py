@@ -11,6 +11,7 @@ import symtable
 import sys
 import tokenize
 import warnings
+from argparse import Namespace
 from collections import Counter, defaultdict
 from contextlib import suppress
 from functools import lru_cache
@@ -30,6 +31,7 @@ from typing import (
 
 import attr  # type: ignore
 import pycodestyle  # type: ignore
+from attrs import define, field
 from flake8.exceptions import PluginExecutionFailed
 
 __version__ = "26.10.27"
@@ -124,17 +126,17 @@ def _is_rebound(
     )
 
 
-@attr.s(unsafe_hash=False)
+@define(unsafe_hash=False)
 class BugBearChecker:
     name = "flake8-bugbear"
     version = __version__
 
-    tree = attr.ib(default=None)
-    filename = attr.ib(default="(none)")
-    lines = attr.ib(default=None)
-    max_line_length = attr.ib(default=79)
-    visitor = attr.ib(init=False, factory=lambda: BugBearVisitor)
-    options = attr.ib(default=None)
+    tree: ast.AST = field(default=None)
+    filename: str = field(default="(none)")
+    lines: list[str] = field(default=None)
+    max_line_length: int = field(default=79)
+    visitor: type[BugBearVisitor] = field(init=False, factory=lambda: BugBearVisitor)
+    options: Namespace = field(default=None)
 
     def run(self) -> Iterable[tuple[int, int, str, type]]:
         if not self.tree or not self.lines:
@@ -339,7 +341,7 @@ class BugBearChecker:
         return False
 
 
-def _is_identifier(arg) -> bool:
+def _is_identifier(arg: ast.expr) -> bool:
     # Return True if arg is a valid identifier, per
     # https://docs.python.org/2/reference/lexical_analysis.html#identifiers
 
@@ -367,7 +369,7 @@ def _flatten_excepthandler(node: ast.expr | None) -> Iterator[ast.expr | None]:
 
 def _check_redundant_excepthandlers(
     names: Sequence[str], node: ast.ExceptHandler, in_trystar: str
-):
+) -> error | None:
     # See if any of the given exception names could be removed, e.g. from:
     #    (MyError, MyError)  # duplicate names
     #    (MyError, BaseException)  # everything derives from the Base
@@ -3811,7 +3813,7 @@ class error(NamedTuple):
 
 
 class Error:
-    def __init__(self, message: str):
+    def __init__(self, message: str) -> None:
         self.message = message
 
     def __call__(self, lineno: int, col: int, vars: tuple[object, ...] = ()) -> error:
