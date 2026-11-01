@@ -19,10 +19,8 @@ from keyword import iskeyword
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     Iterator,
-    List,
     NamedTuple,
     Protocol,
     Sequence,
@@ -503,12 +501,12 @@ class ExceptBaseExceptionVisitor(ast.NodeVisitor):
         ):
             self._re_raised = True
             return
-        return super().generic_visit(node)
+        super().generic_visit(node)
 
     def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
         if node is not self.root:
             return  # entered a nested except - stop searching
-        return super().generic_visit(node)
+        super().generic_visit(node)
 
 
 @attr.define
@@ -820,39 +818,41 @@ def _module_name_is_from(module: ast.Module, source: str, name: str) -> bool:
     return not bound or _module_binding_is_from(module, source, name)
 
 
-@attr.s
+@define
 class BugBearVisitor(ast.NodeVisitor):
-    filename = attr.ib()
-    lines = attr.ib()
-    b008_b039_extend_immutable_calls: set[str] = attr.ib(factory=set)
-    b902_classmethod_decorators: set[str] = attr.ib(factory=set)
-    node_window: list[ast.AST] = attr.ib(factory=list)
-    errors: list[error] = attr.ib(factory=list)
-    contexts: list[Context] = attr.ib(factory=list)
-    b040_caught_exception: B040CaughtException | None = attr.ib(default=None)
+    filename: str = field()
+    lines: list[str] = field()
+    b008_b039_extend_immutable_calls: set[str] = field(factory=set)
+    b902_classmethod_decorators: set[str] = field(factory=set)
+    node_window: list[ast.AST] = field(factory=list)
+    errors: list[error] = field(factory=list)
+    contexts: list[Context] = field(factory=list)
+    b040_caught_exception: B040CaughtException | None = field(default=None)
 
     NODE_WINDOW_SIZE = 4
-    _b023_seen: set[ast.Name] = attr.ib(factory=set, init=False)
-    _closure_reads_cache: dict[int, set[str]] = attr.ib(factory=dict, init=False)
-    _symtable_root: Any = attr.ib(default=False, init=False)
-    _b023_scopes: dict[int, tuple] = attr.ib(factory=dict, init=False)
-    _b005_imports: set[str] = attr.ib(factory=set, init=False)
+    _b023_seen: set[ast.Name] = field(factory=set, init=False)
+    _closure_reads_cache: dict[int, set[str]] = field(factory=dict, init=False)
+    _symtable_root: Any = field(default=False, init=False)
+    _b023_scopes: dict[
+        int, tuple[dict[int, ast.AST], dict[str, list[ast.Name]], set[int]]
+    ] = field(factory=dict, init=False)
+    _b005_imports: set[str] = field(factory=set, init=False)
     # Module-scope libcst bindings from `_b906_scope_bindings` (name ->
     # ``"module"``/``"name"``/``None``), resolved lazily per class so the
     # position cutoff is the class being checked; ``None`` until known.
-    _b906_module_libcst: Callable[[ast.AST], dict[str, str | None]] | None = attr.ib(
+    _b906_module_libcst: Callable[[ast.AST], dict[str, str | None]] | None = field(
         default=None, init=False
     )
     # None marks an imported name that has since been rebound at module scope.
-    _b008_imports: dict[str, str | None] = attr.ib(factory=dict, init=False)
-    _b008_class_imports: list[dict[str, str | None]] = attr.ib(factory=list, init=False)
-    _b008_class_globals: list[set[str]] = attr.ib(factory=list, init=False)
+    _b008_imports: dict[str, str | None] = field(factory=dict, init=False)
+    _b008_class_imports: list[dict[str, str | None]] = field(factory=list, init=False)
+    _b008_class_globals: list[set[str]] = field(factory=list, init=False)
     # Bare names (groupby, batched, map) already resolved for this module, keyed
     # by the module they are expected to come from.
-    _bare_names: dict[tuple[str, str], bool] = attr.ib(factory=dict, init=False)
+    _bare_names: dict[tuple[str, str], bool] = field(factory=dict, init=False)
 
     # set to "*" when inside a try/except*, for correctly printing errors
-    in_trystar: str = attr.ib(default="")
+    in_trystar: str = field(default="")
 
     if False:
         # Useful for tracing what the hell is going on.
@@ -2010,7 +2010,7 @@ class BugBearVisitor(ast.NodeVisitor):
         """Check for inheritance from abstract classes in abc and lack of
         any methods decorated with abstract*"""
 
-        def is_abc_class(value, name: str = "ABC"):
+        def is_abc_class(value: ast.AST, name: str = "ABC") -> bool:
             # class foo(metaclass = [abc.]ABCMeta)
             if isinstance(value, ast.keyword):
                 return value.arg == "metaclass" and is_abc_class(value.value, "ABCMeta")
@@ -3471,7 +3471,7 @@ def _dotted_targets(target: ast.AST) -> Iterator[tuple[str, ast.Attribute]]:
             yield name, target
 
 
-@attr.s
+@define
 class NameFinder(ast.NodeVisitor):
     """Finds a name within a tree of nodes.
 
@@ -3479,14 +3479,14 @@ class NameFinder(ast.NodeVisitor):
     key is name string, value is the node (useful for location purposes).
     """
 
-    names: Dict[str, List[ast.Name]] = attr.ib(factory=dict)
+    names: dict[str, list[ast.Name]] = field(factory=dict)
 
     def visit_Name(  # noqa: B906 # names don't contain other names
         self, node: ast.Name
     ) -> None:
         self.names.setdefault(node.id, []).append(node)
 
-    def visit(self, node):
+    def visit(self, node) -> Any:
         """Like super-visit but supports iteration over lists."""
         if not isinstance(node, list):
             return super().visit(node)
@@ -3547,7 +3547,7 @@ class B913UsageFinder(NameFinder):
             self.visit(node.target)
 
 
-@attr.s
+@define
 class NamedExprFinder(ast.NodeVisitor):
     """Finds names defined through an ast.NamedExpr.
 
@@ -3555,13 +3555,13 @@ class NamedExprFinder(ast.NodeVisitor):
     key is name string, value is the node (useful for location purposes).
     """
 
-    names: Dict[str, List[ast.Name]] = attr.ib(factory=dict)
+    names: dict[str, list[ast.Name]] = field(factory=dict)
 
     def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
         self.names.setdefault(node.target.id, []).append(node.target)
         self.generic_visit(node)
 
-    def visit(self, node):
+    def visit(self, node) -> Any:
         """Like super-visit but supports iteration over lists."""
         if not isinstance(node, list):
             return super().visit(node)
